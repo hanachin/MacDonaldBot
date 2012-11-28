@@ -19,7 +19,10 @@ client.on_timeline_status do |status|
   puts status.text
   if status.text =~ /^@calorie_bot /
     puts "カロリーボット、返事する。"
-    # Twitter.update 'カロリーbotです。'
+    p status.user.screen_name
+    mes = "@#{status.user.screen_name} #{FastFood.calorie(status.text)} kcal: #{FastFood.name(status.text)}"
+    puts mes
+    Twitter.update mes
   end
 end
 

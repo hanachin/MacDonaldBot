@@ -44,12 +44,13 @@ class FastFood
     end
 
     def many_menus?(order)
-      order =~ /[、 ]/
+      order =~ /[、 x×*0-9とを]/
     end
 
     def menu order
-      n = menu_name order
-      {n => menu_calorie(n)}
+      if n = menu_name(order)
+        [n, menu_calorie(n)]
+      end
     end
 
     def take_menu orders
@@ -58,16 +59,42 @@ class FastFood
 
     def menus order
       alias_menu_name_table.keys
-      order.split(/[、 ]/).inject({}) {|orders, order|
-        orders.merge menu order
+      prev_order = ''
+      result = []
+      order.split(/([、 x×*0-9とを]+)/).map {|order|
+        if menu order
+          prev_order = order
+          result.push menu order
+        else
+          order =~ /([0-9]+)/
+          if $1 && $1.to_i >= 1
+            ($1.to_i - 1).times { result.push menu(prev_order) }
+          end
+        end
       }
+      result
     end
 
     def calorie(order)
       if many_menus? order
-        menus order
+        menus(order).map(&:last).inject(&:+)
       else
-        menu order
+        menu(order).last
+      end
+    end
+
+    def name(order)
+      if many_menus? order
+        ns = menus(order).map(&:first)
+        ns.uniq.map {|n|
+          if (c = ns.count(n)) > 1
+            "#{n}x#{c}"
+          else
+            n
+          end
+        }.join("、")
+      else
+        menu(order).last
       end
     end
   end
